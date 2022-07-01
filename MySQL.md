@@ -63,7 +63,7 @@ mysql -h 127.0.0.1 -P 3306 -u root -p
 
 #### varchar
 
-变长字符串。真实数据有多少个字符串就按多少个字符串来存储。但不能超过定义的最大值。
+变长字符串。真实数据有多少个字符串就按多少个字符串来存储。但不能超过定义的最大值。可以节省空间
 
 ```sql
 varchar(10)    -- 最多用10个字符来存储，如果真实数据小于10个字符，则按真实数据的字符个数来分配存储空间
@@ -71,7 +71,7 @@ varchar(10)    -- 最多用10个字符来存储，如果真实数据小于10个�
 
 #### char
 
-定长字符串
+定长字符串，读写速度比变长字符串要快。
 
 ```sql
 char(10)  -- 固定用10个字符来存储
@@ -79,9 +79,15 @@ char(10)  -- 固定用10个字符来存储
 
 #### text
 
+一般用于保存变长的大字符串，最多2<sup>16</sup> - 1个字符。常用于保存长文本，如文章，新闻等。 
+
 #### mediumtext
 
+和text类似，但是最大值为2<sup>24</sup>-1个字符
+
 #### longtext
+
+和text类似，但是最大值为2<sup>32</sup>-1个字符
 
 ### 整数
 
@@ -93,15 +99,15 @@ char(10)  -- 固定用10个字符来存储
 
 #### int
 
-有符号，取值范围:  -2^31^ ~ 2^31^ -1
+有符号，取值范围:  -2<sup>31</sup> ~ 2<sup>31</sup> -1
 
-无符号，取值范围： 0 ~ 2^32^
+无符号，取值范围： 0 ~ 2<sup>32</sup>
 
 #### bigint
 
-有符号，取值范围：-2^63^  ~ 2^63^  -1 
+有符号，取值范围：-2<sup>63</sup>  ~ 2<sup>63</sup>  -1 
 
-无符号，取值范围： 0 ~ 2^64^
+无符号，取值范围： 0 ~ 2<sup>64</sup>
 
 ### 浮点数
 
@@ -123,6 +129,16 @@ create table tb1 (
 #### double
 
 不精准
+
+### 时间
+
+#### datetime
+
+存储年月日时分秒
+
+#### date
+
+存储年月日
 
  ## SQL语句
 
@@ -160,12 +176,6 @@ drop database 数据库名
 show tables;
 ```
 
-#### 查看表中数据
-
-```sql
-select * from 表名
-```
-
 #### 创建数据表
 
 ```sql
@@ -174,12 +184,6 @@ create table 表名 (
     name varchar(16) not null,                    -- 数据类型为字符型，不允许为空
     age tinyint unsigned default 3                -- 不存储负数，插入数据时，默认为3,取值范围为 0 ~ 255
 ) default charset=utf8;
-```
-
-#### 插入数据
-
-```sql
-insert into 表名(指定列名1，指定列名2) values(值1，值2),(值1，值2)
 ```
 
 #### 删除数据表
@@ -192,6 +196,88 @@ drop table 表名
 
 ```sql
 desc 表名
+```
+
+#### 修改表结构
+
+```sql
+alter 表名 add 列名 列定义  -- 向指定表添加新列
+```
+
+### 数据行操作
+
+#### 插入数据
+
+```sql
+insert into 表名 (指定列名1，指定列名2) values(值1，值2),(值1，值2)
+```
+
+#### 删除数据
+
+```sql
+delete from 表名;  -- 删除表中的所有数据
+delete from 表名 where 条件  -- 只删除符合条件的数据
+```
+
+#### 修改数据
+
+```sql
+update 表名 set 列 = 值,列 = 值 -- 将表中所有列的值都统一
+update 表名 set 列 = 值 where 条件  -- 只修改表中符合条件的数据的值
+```
+
+#### 查看表中数据
+
+```sql
+select * from 表名  -- 查询表中所有数据
+select 列1, 列2 from 表名  -- 查询表中所有数据的特定字段而不是全部字段
+select * from 表名 where 条件  -- 只查询表中符合条件的数据
+```
+
+## 在项目中的应用
+
+一般先创建数据库和表结构，表中的数据由程序进行增删改查
+
+### Python
+
+模块：pymysql
+
+#### 建立链接
+
+```python
+# 建立链接
+with pymysql.connect(host="192.168.98.130", port=3306, user="root", password="123456", db="employee",
+                     charset="utf8") as con:
+    # 获取游标，游标可以看作是sql查询结果的一个指针
+    with con.cursor() as cursor:
+        # 执行sql语句
+```
+
+#### 执行sql语句
+
+```python
+# 执行sql语句
+# 插入数据
+sql = "insert into admin(username,password,mobile) values(%s,%s,%s)"   
+cursor.execute(sql, ["wade", "xxx","123456789"])
+# 删除数据
+sql = "delete from admin where id = %s"
+cursor.execute(sql,["1"])
+# 修改数据
+sql = "update admin set mobile = %s where id = %s"
+cursor.execute(sql,["12345678954","1"])
+# 查询数据
+cursor.execute("select * from admin")   # 执行查询语句需要获取查询到的数据
+data_list = cursor.fetchall()
+# cursor.fetchone()    # 用于校验数据库中是否存在某一条数据
+print(data_list)     # ((1, 'wade', '1234', 'xxxx'), (2, 'wade', 'xxx', '123456789'))，默认返回元组
+
+```
+
+#### 提交执行
+
+```python
+con.commit()
 ```
 
 ## Trouble shotting
