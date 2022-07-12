@@ -271,13 +271,42 @@ cursor.execute("select * from admin")   # 执行查询语句需要获取查询�
 data_list = cursor.fetchall()
 # cursor.fetchone()    # 用于校验数据库中是否存在某一条数据
 print(data_list)     # ((1, 'wade', '1234', 'xxxx'), (2, 'wade', 'xxx', '123456789'))，默认返回元组
-
 ```
 
 #### 提交执行
 
 ```python
 con.commit()
+```
+
+### SQL语言
+#### 批量创建模拟数据
+
+```sql
+-- 清除同名存储过程
+drop procedure if exists mock;
+DELIMITER $$
+-- 创建存储过程
+CREATE PROCEDURE mock (n INT ) 
+BEGIN
+	DECLARE i INT DEFAULT 0;
+	declare mobile char(11);
+	SET autocommit = 0;
+	-- 循环mock数据
+		REPEAT
+			SET i = i + 1;
+			# repeat sql
+-- 				随机生成电话号码
+			set mobile = concat('1',substring(cast(3 + (rand() * 10) % 7 AS char(50)), 1, 1),right(left(trim(cast(rand() AS char(50))), 11), 9));
+			INSERT into employee_manage_mobile(`mobile`,`level` ,`status`,`price`) values (mobile ,ceiling(rand()*3) ,ceiling(rand()*2) ,ceiling(rand()*100));
+			UNTIL i = n 
+		END REPEAT;
+	-- 提交mock数据
+	COMMIT;
+	SET autocommit = 1;
+END 
+$$
+
 ```
 
 ## Trouble shotting
